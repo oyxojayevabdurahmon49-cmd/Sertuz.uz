@@ -1,1424 +1,354 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sertifikat Tizimi - QR Kod bilan tasdiqlash</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #ec4899;
-            --accent: #10b981;
-            --bg: #0f172a;
-            --bg-card: #1e293b;
-            --bg-light: #334155;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255,255,255,0.1);
-            --shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Animated Background */
-        .bg-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .bg-animation::before,
-        .bg-animation::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.3;
-            animation: float 20s infinite ease-in-out;
-        }
-
-        .bg-animation::before {
-            width: 600px;
-            height: 600px;
-            background: var(--primary);
-            top: -200px;
-            right: -200px;
-        }
-
-        .bg-animation::after {
-            width: 500px;
-            height: 500px;
-            background: var(--secondary);
-            bottom: -200px;
-            left: -200px;
-            animation-delay: -10s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -30px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-
-        /* Navigation */
-        nav {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 5%;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-            cursor: pointer;
-        }
-
-        .nav-links a:hover, .nav-links a.active {
-            color: var(--text);
-        }
-
-        /* Container */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 5%;
-        }
-
-        /* Hero */
-        .hero {
-            text-align: center;
-            padding: 4rem 0;
-        }
-
-        .hero h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(to right, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero p {
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Main Grid */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 3rem;
-            margin-top: 3rem;
-        }
-
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 2rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .card-title .icon {
-            width: 40px;
-            height: 40px;
-            background: var(--gradient-1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text);
-            font-family: inherit;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        /* Template Selector */
-        .template-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .template-option {
-            position: relative;
-            cursor: pointer;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .template-option:hover {
-            transform: translateY(-2px);
-        }
-
-        .template-option.active {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-
-        .template-preview {
-            height: 80px;
-            background: var(--bg-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
-
-        .template-option:nth-child(1) .template-preview { background: var(--gradient-1); }
-        .template-option:nth-child(2) .template-preview { background: var(--gradient-2); }
-        .template-option:nth-child(3) .template-preview { background: var(--gradient-3); }
-
-        .template-name {
-            padding: 0.5rem;
-            text-align: center;
-            font-size: 0.8rem;
-            font-weight: 500;
-            background: var(--bg);
-        }
-
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary {
-            background: var(--gradient-1);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--bg-light);
-            color: var(--text);
-            margin-top: 0.5rem;
-        }
-
-        .btn-secondary:hover {
-            background: var(--border);
-        }
-
-        /* Certificate Preview */
-        .preview-container {
-            position: sticky;
-            top: 100px;
-        }
-
-        .certificate-wrapper {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            transform-style: preserve-3d;
-            transition: transform 0.3s;
-        }
-
-        .certificate {
-            width: 100%;
-            aspect-ratio: 1.414/1;
-            background: white;
-            border: 3px solid #e2e8f0;
-            position: relative;
-            overflow: hidden;
-            font-family: 'Playfair Display', serif;
-        }
-
-        /* Certificate Template 1 - Classic */
-        .cert-classic {
-            background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
-        }
-
-        .cert-classic .cert-border {
-            position: absolute;
-            inset: 20px;
-            border: 2px solid #1e293b;
-        }
-
-        .cert-classic .cert-inner-border {
-            position: absolute;
-            inset: 26px;
-            border: 1px solid #cbd5e1;
-        }
-
-        .cert-classic .cert-header {
-            text-align: center;
-            padding-top: 60px;
-            color: #1e293b;
-        }
-
-        .cert-classic .cert-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-        }
-
-        .cert-classic .cert-subtitle {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            color: #64748b;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-        }
-
-        .cert-classic .cert-body {
-            text-align: center;
-            padding: 40px 60px;
-            color: #334155;
-        }
-
-        .cert-classic .cert-present {
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            color: #64748b;
-            margin-bottom: 1rem;
-        }
-
-        .cert-classic .cert-name {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 1rem 0;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 1rem;
-            display: inline-block;
-        }
-
-        .cert-classic .cert-course {
-            font-family: 'Inter', sans-serif;
-            font-size: 1.1rem;
-            color: #475569;
-            margin: 1.5rem 0;
-            line-height: 1.6;
-        }
-
-        .cert-classic .cert-course strong {
-            color: #1e293b;
-            font-size: 1.3rem;
-            display: block;
-            margin-top: 0.5rem;
-        }
-
-        .cert-classic .cert-footer {
-            position: absolute;
-            bottom: 60px;
-            left: 60px;
-            right: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .cert-classic .cert-date {
-            text-align: center;
-        }
-
-        .cert-classic .cert-date-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .cert-classic .cert-date-value {
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            color: #1e293b;
-            font-weight: 600;
-            margin-top: 0.5rem;
-            border-top: 1px solid #cbd5e1;
-            padding-top: 0.5rem;
-        }
-
-        .cert-classic .cert-signature {
-            text-align: center;
-        }
-
-        .cert-classic .cert-sig-line {
-            width: 150px;
-            height: 1px;
-            background: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-
-        .cert-classic .cert-sig-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .cert-classic .cert-qr {
-            position: absolute;
-            bottom: 60px;
-            right: 60px;
-            width: 80px;
-            height: 80px;
-        }
-
-        .cert-classic .cert-seal {
-            position: absolute;
-            top: 60px;
-            right: 60px;
-            width: 100px;
-            height: 100px;
-            background: var(--gradient-1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2.5rem;
-            opacity: 0.1;
-        }
-
-        /* Certificate Template 2 - Modern */
-        .cert-modern {
-            background: #0f172a;
-            color: white;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .cert-modern .cert-accent {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 8px;
-            background: var(--gradient-2);
-        }
-
-        .cert-modern .cert-content {
-            padding: 60px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .cert-modern .cert-badge {
-            width: 80px;
-            height: 80px;
-            background: var(--gradient-2);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .cert-modern .cert-title {
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.3em;
-            color: #94a3b8;
-            margin-bottom: 1rem;
-        }
-
-        .cert-modern .cert-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(to right, #fff, #cbd5e1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .cert-modern .cert-course {
-            font-size: 1.2rem;
-            color: #94a3b8;
-            margin-bottom: 3rem;
-        }
-
-        .cert-modern .cert-course strong {
-            color: white;
-            display: block;
-            margin-top: 0.5rem;
-            font-size: 1.5rem;
-        }
-
-        .cert-modern .cert-meta {
-            display: flex;
-            gap: 3rem;
-            margin-top: auto;
-        }
-
-        .cert-modern .cert-meta-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .cert-modern .cert-meta-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            color: #64748b;
-        }
-
-        .cert-modern .cert-meta-value {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .cert-modern .cert-qr {
-            position: absolute;
-            bottom: 60px;
-            right: 60px;
-            width: 100px;
-            height: 100px;
-            background: white;
-            padding: 10px;
-            border-radius: 12px;
-        }
-
-        /* Certificate Template 3 - Minimal */
-        .cert-minimal {
-            background: #fafafa;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 60px;
-        }
-
-        .cert-minimal .cert-icon {
-            font-size: 4rem;
-            margin-bottom: 2rem;
-        }
-
-        .cert-minimal .cert-label {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.4em;
-            color: #94a3b8;
-            margin-bottom: 1rem;
-        }
-
-        .cert-minimal .cert-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 1.5rem;
-        }
-
-        .cert-minimal .cert-divider {
-            width: 60px;
-            height: 3px;
-            background: var(--gradient-3);
-            margin: 1.5rem auto;
-            border-radius: 2px;
-        }
-
-        .cert-minimal .cert-course {
-            font-size: 1.2rem;
-            color: #475569;
-            max-width: 500px;
-            line-height: 1.6;
-        }
-
-        .cert-minimal .cert-course strong {
-            display: block;
-            margin-top: 0.5rem;
-            color: #1e293b;
-            font-size: 1.4rem;
-        }
-
-        .cert-minimal .cert-footer-min {
-            margin-top: 3rem;
-            display: flex;
-            gap: 3rem;
-            font-size: 0.9rem;
-            color: #64748b;
-        }
-
-        .cert-minimal .cert-qr {
-            margin-top: 2rem;
-            padding: 10px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-
-        /* QR Section */
-        .qr-section {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .qr-info {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--accent);
-            font-size: 0.9rem;
-        }
-
-        .qr-display {
-            display: flex;
-            justify-content: center;
-            padding: 1rem;
-            background: white;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-        }
-
-        .cert-id {
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-
-        /* Verification Section */
-        .verify-section {
-            margin-top: 3rem;
-            text-align: center;
-        }
-
-        .verify-box {
-            max-width: 500px;
-            margin: 2rem auto;
-            background: var(--bg-card);
-            border: 2px dashed var(--border);
-            border-radius: 24px;
-            padding: 3rem 2rem;
-            transition: all 0.3s;
-        }
-
-        .verify-box:hover {
-            border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.05);
-        }
-
-        .verify-box.dragover {
-            border-color: var(--accent);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .verify-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .verify-text {
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-        }
-
-        .verify-input {
-            display: none;
-        }
-
-        .verify-btn {
-            display: inline-block;
-            padding: 0.875rem 2rem;
-            background: var(--gradient-1);
-            color: white;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .verify-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-        }
-
-        /* Result Card */
-        .result-card {
-            background: var(--bg-card);
-            border-radius: 24px;
-            padding: 2rem;
-            margin-top: 2rem;
-            border: 1px solid var(--border);
-            display: none;
-        }
-
-        .result-card.show {
-            display: block;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-valid {
-            border-color: var(--accent);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .result-invalid {
-            border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.05);
-        }
-
-        .result-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .result-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .result-details {
-            color: var(--text-muted);
-            margin-top: 1rem;
-        }
-
-        .result-details p {
-            margin: 0.5rem 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .result-details p:last-child {
-            border-bottom: none;
-        }
-
-        .result-details strong {
-            color: var(--text);
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            box-shadow: var(--shadow);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast-success {
-            border-left: 4px solid var(--accent);
-        }
-
-        /* Hidden */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .template-selector {
-                grid-template-columns: 1fr;
-            }
-            
-            .cert-modern .cert-content {
-                padding: 30px;
-            }
-            
-            .cert-modern .cert-name {
-                font-size: 2rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNC EDUCATION - Sertifikat Tizimi</title>
+  
+  <!-- Kutubxonalar -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f1f5f9; color: #1e293b; padding-bottom: 40px; }
+
+    header { background: #0f172a; color: white; padding: 15px 20px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    header h1 { font-size: 20px; font-weight: bold; letter-spacing: 1px; color: #38bdf8; }
+    header p { font-size: 12px; color: #94a3b8; }
+
+    nav { display: flex; justify-content: center; gap: 10px; background: #1e293b; padding: 10px; }
+    nav button { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; }
+    nav button.active { background: #0284c7; color: white; border-color: #0284c7; }
+
+    .tab-content { display: none; max-width: 850px; margin: 20px auto; padding: 0 15px; }
+    .tab-content.active { display: block; }
+
+    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media(min-width: 600px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+
+    label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px; display: block; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+    input:focus { border-color: #0284c7; }
+
+    .btn { padding: 10px 18px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+    .btn-primary { background: #0284c7; color: white; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-secondary { background: #64748b; color: white; }
+
+    /* Sertifikat Shablon Stillari */
+    .cert-wrapper { overflow-x: auto; padding: 10px 0; }
+    .certificate {
+      width: 800px;
+      height: 565px;
+      background: #ffffff;
+      margin: 0 auto;
+      padding: 25px;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      box-sizing: border-box;
+    }
+
+    .cert-border-outer { border: 8px solid #0f172a; height: 100%; padding: 15px; box-sizing: border-box; position: relative; }
+    .cert-border-inner { border: 2px solid #ca8a04; height: 100%; padding: 20px; box-sizing: border-box; text-align: center; position: relative; background: #fafafa; }
+
+    .cert-header { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px; }
+    .cert-title { font-size: 38px; font-weight: 900; color: #ca8a04; letter-spacing: 4px; margin: 15px 0 5px 0; }
+    .cert-subtitle { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 2px; }
+
+    .cert-recipient { font-size: 13px; color: #334155; margin-top: 25px; }
+    .cert-name { font-size: 30px; font-weight: bold; color: #0f172a; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 25px 5px 25px; margin: 10px 0; }
+    .cert-body { font-size: 13px; color: #334155; }
+    .cert-course { font-size: 22px; font-weight: bold; color: #0284c7; margin: 8px 0; }
+
+    .cert-footer { position: absolute; bottom: 20px; left: 30px; right: 30px; display: flex; justify-content: space-between; align-items: flex-end; text-align: left; }
+    .meta-item { font-size: 11px; color: #475569; margin-bottom: 3px; }
+    
+    /* Dizayn Variatsiyalari */
+    .style-classic .cert-border-outer { border-color: #0f172a; }
+    .style-classic .cert-title { color: #ca8a04; }
+    
+    .style-modern .cert-border-outer { border-color: #0284c7; }
+    .style-modern .cert-border-inner { border-color: #0284c7; background: #f0f9ff; }
+    .style-modern .cert-title { color: #0284c7; }
+
+    .style-emerald .cert-border-outer { border-color: #065f46; }
+    .style-emerald .cert-border-inner { border-color: #059669; background: #ecfdf5; }
+    .style-emerald .cert-title { color: #059669; }
+
+    /* Verify Status */
+    .status-badge { padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 15px; }
+    .status-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .status-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+  </style>
 </head>
 <body>
-    <div class="bg-animation"></div>
 
-    <!-- Navigation -->
-    <nav>
-        <div class="nav-content">
-            <div class="logo">🏆 Sertifikat.uz</div>
-            <ul class="nav-links">
-                <li><a onclick="showSection('create')" class="active" id="nav-create">Yaratish</a></li>
-                <li><a onclick="showSection('verify')" id="nav-verify">Tekshirish</a></li>
-            </ul>
+  <header>
+    <h1>CNC EDUCATION</h1>
+    <p>Professional Sertifikat Generatori va Baza Tizimi</p>
+  </header>
+
+  <nav>
+    <button class="active" onclick="switchTab('tab-generator', this)">📜 Generator</button>
+    <button onclick="switchTab('tab-verify', this)">🔍 Tekshirish</button>
+    <button onclick="switchTab('tab-database', this)">💾 Baza</button>
+  </nav>
+
+  <!-- 1-TAB: GENERATOR -->
+  <div id="tab-generator" class="tab-content active">
+    <div class="card">
+      <div class="form-grid">
+        <div>
+          <label>O'quv Markazi Nomi</label>
+          <input type="text" id="inOrg" value="CNC EDUCATION" oninput="updateCert()">
         </div>
-    </nav>
-
-    <!-- Create Section -->
-    <div id="create-section">
-        <div class="container">
-            <div class="hero">
-                <h1>Sertifikat Yaratish</h1>
-                <p>Professional sertifikatlar yarating, QR kod bilan himoyalang va PDF formatida yuklab oling</p>
-            </div>
-
-            <div class="main-grid">
-                <!-- Form Side -->
-                <div class="form-side">
-                    <div class="card">
-                        <div class="card-title">
-                            <div class="icon">📝</div>
-                            Ma'lumotlarni kiriting
-                        </div>
-
-                        <form id="certForm">
-                            <div class="form-group">
-                                <label>Sertifikat shabloni</label>
-                                <div class="template-selector">
-                                    <div class="template-option active" onclick="selectTemplate('classic', this)">
-                                        <div class="template-preview">🎓</div>
-                                        <div class="template-name">Klassik</div>
-                                    </div>
-                                    <div class="template-option" onclick="selectTemplate('modern', this)">
-                                        <div class="template-preview">💎</div>
-                                        <div class="template-name">Zamonaviy</div>
-                                    </div>
-                                    <div class="template-option" onclick="selectTemplate('minimal', this)">
-                                        <div class="template-preview">✨</div>
-                                        <div class="template-name">Minimal</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="firstName">Ism</label>
-                                    <input type="text" id="firstName" placeholder="Ali" required oninput="updatePreview()">
-                                </div>
-                                <div class="form-group">
-                                    <label for="lastName">Familiya</label>
-                                    <input type="text" id="lastName" placeholder="Valiyev" required oninput="updatePreview()">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="course">Kurs nomi</label>
-                                <input type="text" id="course" placeholder="Web Dasturlash" required oninput="updatePreview()">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="organization">Tashkilot</label>
-                                <input type="text" id="organization" placeholder="IT Academy" required oninput="updatePreview()">
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="date">Sana</label>
-                                    <input type="date" id="date" required onchange="updatePreview()">
-                                </div>
-                                <div class="form-group">
-                                    <label for="duration">Davomiyligi</label>
-                                    <input type="text" id="duration" placeholder="3 oy" oninput="updatePreview()">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="instructor">O'qituvchi</label>
-                                <input type="text" id="instructor" placeholder="Dilshod Rahimov" oninput="updatePreview()">
-                            </div>
-
-                            <button type="button" class="btn btn-primary" onclick="generateCertificate()">
-                                <span>🎨</span> Sertifikat yaratish
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="downloadPDF()">
-                                <span>📄</span> PDF yuklab olish
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- QR Info -->
-                    <div class="card qr-section">
-                        <div class="card-title">
-                            <div class="icon" style="background: var(--gradient-3);">🔐</div>
-                            QR Kod ma'lumotlari
-                        </div>
-                        <div class="qr-info">
-                            <span>✓</span>
-                            QR kod avtomatik yaratiladi va sertifikatni tasdiqlash uchun ishlatiladi
-                        </div>
-                        <div class="qr-display" id="qrDisplay">
-                            <div style="color: #94a3b8; font-size: 0.9rem;">Sertifikat yaratilganda QR kod paydo bo'ladi</div>
-                        </div>
-                        <div class="cert-id" id="certIdDisplay"></div>
-                    </div>
-                </div>
-
-                <!-- Preview Side -->
-                <div class="preview-side">
-                    <div class="preview-container">
-                        <div class="card">
-                            <div class="card-title">
-                                <div class="icon" style="background: var(--gradient-2);">👁</div>
-                                Oldindan ko'rish
-                            </div>
-                            <div class="certificate-wrapper" id="certificateWrapper">
-                                <div id="certificatePreview" class="certificate cert-classic">
-                                    <!-- Certificate content will be inserted here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div>
+          <label>O'quvchi F.I.SH</label>
+          <input type="text" id="inName" value="Abdurahmon Oyxojayev" oninput="updateCert()">
         </div>
+        <div>
+          <label>Kurs Yo'nalishi</label>
+          <input type="text" id="inCourse" value="CNC Milling Professional" oninput="updateCert()">
+        </div>
+        <div>
+          <label>Sertifikat ID</label>
+          <div style="display:flex; gap:5px;">
+            <input type="text" id="inId" value="CNC-2026-9481">
+            <button class="btn btn-secondary" onclick="generateRandomID()">🔄</button>
+          </div>
+        </div>
+        <div>
+          <label>Berilgan Sana</label>
+          <input type="date" id="inDate" onchange="updateCert()">
+        </div>
+        <div>
+          <label>Dizayn Uslubi</label>
+          <select id="inStyle" onchange="changeStyle()">
+            <option value="style-classic">Oltin Klassik</option>
+            <option value="style-modern">Zamonaviy Ko'k</option>
+            <option value="style-emerald">Zümrad Yashil</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-success" onclick="saveToFirebase()">💾 Bazaga Saqlash va QR Yaratish</button>
+        <button class="btn btn-primary" onclick="downloadPNG()">🖼️ PNG Yuklash</button>
+      </div>
     </div>
 
-    <!-- Verify Section -->
-    <div id="verify-section" class="hidden">
-        <div class="container">
-            <div class="hero">
-                <h1>Sertifikatni Tekshirish</h1>
-                <p>QR kodni skanerlang yoki sertifikat ID raqamini kiriting</p>
+    <!-- PREVIEW -->
+    <div class="cert-wrapper">
+      <div class="certificate style-classic" id="certFrame">
+        <div class="cert-border-outer">
+          <div class="cert-border-inner">
+            <div class="cert-header" id="outOrg">CNC EDUCATION</div>
+            <div class="cert-title">SERTIFIKAT</div>
+            <div class="cert-subtitle">Muvaffaqiyatli Yakunlaganlik Haqqida Guvohnoma</div>
+
+            <div class="cert-recipient">Ushbu sertifikat tasdiqlaydiki:</div>
+            <div class="cert-name" id="outName">Abdurahmon Oyxojayev</div>
+
+            <div class="cert-body">quyidagi yo'nalish bo'yicha o'quv kursini muvaffaqiyatli tamomladi:</div>
+            <div class="cert-course" id="outCourse">CNC Milling Professional</div>
+
+            <div class="cert-footer">
+              <div>
+                <div class="meta-item"><strong>ID:</strong> <span id="outId">CNC-2026-9481</span></div>
+                <div class="meta-item"><strong>Berilgan sana:</strong> <span id="outDate">15.09.2026</span></div>
+              </div>
+              <div>
+                <canvas id="qr-code"></canvas>
+              </div>
             </div>
-
-            <div class="verify-section">
-                <div class="verify-box" id="verifyBox" onclick="document.getElementById('qrInput').click()">
-                    <div class="verify-icon">📷</div>
-                    <h3 style="margin-bottom: 0.5rem;">QR Kodni yuklang</h3>
-                    <p class="verify-text">Faylni tanlash uchun bosing yoki bu yerga torting</p>
-                    <label class="verify-btn">Fayl tanlash</label>
-                    <input type="file" id="qrInput" class="verify-input" accept="image/*" onchange="handleQRUpload(event)">
-                </div>
-
-                <div style="margin: 2rem 0; color: var(--text-muted);">yoki</div>
-
-                <div class="card" style="max-width: 500px; margin: 0 auto;">
-                    <div class="form-group">
-                        <label>Sertifikat ID raqami</label>
-                        <input type="text" id="certIdInput" placeholder="CERT-XXXX-XXXX" style="text-align: center; font-family: monospace;">
-                    </div>
-                    <button class="btn btn-primary" onclick="verifyById()">
-                        <span>🔍</span> Tekshirish
-                    </button>
-                </div>
-
-                <!-- Result -->
-                <div id="verifyResult" class="result-card">
-                    <div class="result-icon" id="resultIcon">✅</div>
-                    <div class="result-title" id="resultTitle">Sertifikat tasdiqlandi</div>
-                    <div class="result-details" id="resultDetails"></div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast">
-        <span id="toastIcon">✓</span>
-        <span id="toastMessage">Amal bajarildi</span>
+  <!-- 2-TAB: VERIFY -->
+  <div id="tab-verify" class="tab-content">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">Sertifikat Haqiqiyligini Tekshirish</h3>
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="searchId" placeholder="Masalan: CNC-2026-9481">
+        <button class="btn btn-primary" onclick="verifyCertificate()">Izlash</button>
+      </div>
     </div>
+    <div id="verifyResult"></div>
+  </div>
 
-    <script>
-        // State
-        let currentTemplate = 'classic';
-        let currentCertId = '';
-        let certificates = JSON.parse(localStorage.getItem('certificates') || '[]');
+  <!-- 3-TAB: DATABASE -->
+  <div id="tab-database" class="tab-content">
+    <div class="card">
+      <h3 style="margin-bottom:15px;">Tizim Bazasidagi Sertifikatlar</h3>
+      <button class="btn btn-secondary" onclick="loadDatabaseList()" style="margin-bottom:15px;">🔄 Ro'yxatni Yangilash</button>
+      <div id="dbList" style="font-size:14px;">Baza ma'lumotlari yuklanmoqda...</div>
+    </div>
+  </div>
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('date').valueAsDate = new Date();
-            updatePreview();
-        });
+  <script>
+    // FIREBASE SOZLAMALARI
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0KuMVqf4dgLZd292M6u-Nj7M4nB4k9uY",
+      authDomain: "sertifikat-ro-yxati-markazi.firebaseapp.com",
+      projectId: "sertifikat-ro-yxati-markazi",
+      storageBucket: "sertifikat-ro-yxati-markazi.firebasestorage.app",
+      messagingSenderId: "1018537529433",
+      appId: "1:1018537529433:web:ed78e9c366922b6adce148",
+      measurementId: "G-PHTD01CF85"
+    };
 
-        // Template Selection
-        function selectTemplate(template, element) {
-            currentTemplate = template;
-            document.querySelectorAll('.template-option').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            updatePreview();
-        }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        // Update Preview
-        function updatePreview() {
-            const firstName = document.getElementById('firstName').value || 'Ism';
-            const lastName = document.getElementById('lastName').value || 'Familiya';
-            const course = document.getElementById('course').value || 'Kurs nomi';
-            const organization = document.getElementById('organization').value || 'Tashkilot';
-            const date = document.getElementById('date').value || new Date().toISOString().split('T')[0];
-            const duration = document.getElementById('duration').value || '';
-            const instructor = document.getElementById('instructor').value || '';
+    let qr;
 
-            const preview = document.getElementById('certificatePreview');
-            const formattedDate = new Date(date).toLocaleDateString('uz-UZ', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+      if(tabId === 'tab-database') loadDatabaseList();
+    }
 
-            let html = '';
+    function updateCert() {
+      document.getElementById('outOrg').innerText = document.getElementById('inOrg').value || "CNC EDUCATION";
+      document.getElementById('outName').innerText = document.getElementById('inName').value || "O'QUVCHI F.I.SH";
+      document.getElementById('outCourse').innerText = document.getElementById('inCourse').value || "KURS NOMI";
+      document.getElementById('outId').innerText = document.getElementById('inId').value;
+      
+      const valDate = document.getElementById('inDate').value;
+      document.getElementById('outDate').innerText = valDate ? valDate.split('-').reverse().join('.') : "15.09.2026";
+    }
 
-            if (currentTemplate === 'classic') {
-                html = `
-                    <div class="cert-border"></div>
-                    <div class="cert-inner-border"></div>
-                    <div class="cert-seal">🏆</div>
-                    <div class="cert-header">
-                        <div class="cert-title">Sertifikat</div>
-                        <div class="cert-subtitle">Tasdiqlash hujjati</div>
-                    </div>
-                    <div class="cert-body">
-                        <div class="cert-present">Bu sertifikatni olgan shaxs</div>
-                        <div class="cert-name">${firstName} ${lastName}</div>
-                        <div class="cert-course">
-                            muvaffaqiyatli tamomlagan<br>
-                            <strong>${course}</strong> kursini
-                            ${duration ? `<br><span style="font-size: 0.9rem; color: #94a3b8;">Davomiyligi: ${duration}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="cert-footer">
-                        <div class="cert-date">
-                            <div class="cert-date-label">Sana</div>
-                            <div class="cert-date-value">${formattedDate}</div>
-                        </div>
-                        <div class="cert-signature">
-                            <div class="cert-sig-line"></div>
-                            <div class="cert-sig-label">${instructor || 'Rahbar'}</div>
-                        </div>
-                    </div>
-                    <div class="cert-qr" id="certQr"></div>
-                `;
-            } else if (currentTemplate === 'modern') {
-                html = `
-                    <div class="cert-accent"></div>
-                    <div class="cert-content">
-                        <div class="cert-badge">🏆</div>
-                        <div class="cert-title">Sertifikat</div>
-                        <div class="cert-name">${firstName} ${lastName}</div>
-                        <div class="cert-course">
-                            ${course} kursini muvaffaqiyatli tamomlagan
-                            ${duration ? `<br><span style="font-size: 0.9rem; opacity: 0.7;">Davomiyligi: ${duration}</span>` : ''}
-                        </div>
-                        <div class="cert-meta">
-                            <div class="cert-meta-item">
-                                <span class="cert-meta-label">Tashkilot</span>
-                                <span class="cert-meta-value">${organization}</span>
-                            </div>
-                            <div class="cert-meta-item">
-                                <span class="cert-meta-label">Sana</span>
-                                <span class="cert-meta-value">${formattedDate}</span>
-                            </div>
-                            <div class="cert-meta-item">
-                                <span class="cert-meta-label">O'qituvchi</span>
-                                <span class="cert-meta-value">${instructor || '---'}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cert-qr" id="certQr"></div>
-                `;
-            } else {
-                html = `
-                    <div class="cert-icon">🏆</div>
-                    <div class="cert-label">Sertifikat</div>
-                    <div class="cert-name">${firstName} ${lastName}</div>
-                    <div class="cert-divider"></div>
-                    <div class="cert-course">
-                        ${course} kursini muvaffaqiyatli tamomlagan
-                        ${duration ? `<br><span style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.5rem; display: block;">Davomiyligi: ${duration}</span>` : ''}
-                    </div>
-                    <div class="cert-footer-min">
-                        <div>
-                            <strong style="color: #1e293b;">${organization}</strong><br>
-                            <span style="font-size: 0.8rem;">Tashkilot</span>
-                        </div>
-                        <div>
-                            <strong style="color: #1e293b;">${formattedDate}</strong><br>
-                            <span style="font-size: 0.8rem;">Sana</span>
-                        </div>
-                        <div>
-                            <strong style="color: #1e293b;">${instructor || '---'}</strong><br>
-                            <span style="font-size: 0.8rem;">O'qituvchi</span>
-                        </div>
-                    </div>
-                    <div class="cert-qr" id="certQr" style="margin-top: 2rem;"></div>
-                `;
-            }
+    function changeStyle() {
+      const frame = document.getElementById('certFrame');
+      frame.className = "certificate " + document.getElementById('inStyle').value;
+    }
 
-            preview.className = `certificate cert-${template}`;
-            preview.innerHTML = html;
-        }
+    function generateRandomID() {
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('inId').value = "CNC-2026-" + rand;
+      updateCert();
+    }
 
-        // Generate Certificate
-        function generateCertificate() {
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const course = document.getElementById('course').value;
-            const organization = document.getElementById('organization').value;
+    function saveToFirebase() {
+      const id = document.getElementById('inId').value;
+      const org = document.getElementById('inOrg').value;
+      const name = document.getElementById('inName').value;
+      const course = document.getElementById('inCourse').value;
+      const date = document.getElementById('outDate').innerText;
 
-            if (!firstName || !lastName || !course || !organization) {
-                showToast('❌', 'Barcha maydonlarni to\'ldiring');
-                return;
-            }
-
-            // Generate unique ID
-            currentCertId = 'CERT-' + Math.random().toString(36).substr(2, 8).toUpperCase();
-            
-            // Generate verification URL (in real app, this would be your domain)
-            const verifyUrl = `${window.location.origin}${window.location.pathname}?verify=${currentCertId}`;
-            
-            // Create QR Code
-            const qrContainer = document.getElementById('qrDisplay');
-            qrContainer.innerHTML = '';
-            new QRCode(qrContainer, {
-                text: verifyUrl,
-                width: 150,
-                height: 150,
-                colorDark: '#0f172a',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
-
-            // Add QR to certificate preview
-            const certQr = document.getElementById('certQr');
-            if (certQr) {
-                certQr.innerHTML = '';
-                new QRCode(certQr, {
-                    text: verifyUrl,
-                    width: currentTemplate === 'modern' ? 80 : 70,
-                    height: currentTemplate === 'modern' ? 80 : 70,
-                    colorDark: currentTemplate === 'modern' ? '#0f172a' : '#1e293b',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            }
-
-            // Display cert ID
-            document.getElementById('certIdDisplay').textContent = `ID: ${currentCertId}`;
-
-            // Save to localStorage
-            const certData = {
-                id: currentCertId,
-                firstName,
-                lastName,
-                course,
-                organization,
-                date: document.getElementById('date').value,
-                duration: document.getElementById('duration').value,
-                instructor: document.getElementById('instructor').value,
-                template: currentTemplate,
-                createdAt: new Date().toISOString()
-            };
-            certificates.push(certData);
-            localStorage.setItem('certificates', JSON.stringify(certificates));
-
-            showToast('✅', 'Sertifikat muvaffaqiyatli yaratildi!');
-        }
-
-        // Download PDF
-        function downloadPDF() {
-            if (!currentCertId) {
-                showToast('❌', 'Avval sertifikat yarating');
-                return;
-            }
-
-            const element = document.getElementById('certificatePreview');
-            
-            html2canvas(element, {
-                scale: 2,
-                backgroundColor: null,
-                logging: false
-            }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('l', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save(`Sertifikat-${currentCertId}.pdf`);
-                
-                showToast('📄', 'PDF yuklab olindi!');
-            });
-        }
-
-        // Show Section
-        function showSection(section) {
-            document.getElementById('create-section').classList.add('hidden');
-            document.getElementById('verify-section').classList.add('hidden');
-            document.getElementById('nav-create').classList.remove('active');
-            document.getElementById('nav-verify').classList.remove('active');
-
-            document.getElementById(section + '-section').classList.remove('hidden');
-            document.getElementById('nav-' + section).classList.add('active');
-        }
-
-        // Verify by ID
-        function verifyById() {
-            const id = document.getElementById('certIdInput').value.trim();
-            if (!id) {
-                showToast('❌', 'ID raqamini kiriting');
-                return;
-            }
-            
-            const cert = certificates.find(c => c.id === id);
-            showVerifyResult(cert);
-        }
-
-        // Handle QR Upload
-        function handleQRUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // In a real app, you would scan the QR code here
-            // For demo, we'll just show a success message
-            showToast('📷', 'QR kod yuklandi. Tekshirilmoqda...');
-            
-            setTimeout(() => {
-                // Simulate finding a certificate
-                if (certificates.length > 0) {
-                    showVerifyResult(certificates[certificates.length - 1]);
-                } else {
-                    showVerifyResult(null);
-                }
-            }, 1500);
-        }
-
-        // Show Verify Result
-        function showVerifyResult(cert) {
-            const result = document.getElementById('verifyResult');
-            const icon = document.getElementById('resultIcon');
-            const title = document.getElementById('resultTitle');
-            const details = document.getElementById('resultDetails');
-
-            result.classList.remove('hidden', 'result-valid', 'result-invalid');
-            
-            if (cert) {
-                result.classList.add('result-valid', 'show');
-                icon.textContent = '✅';
-                title.textContent = 'Sertifikat tasdiqlandi';
-                title.style.color = 'var(--accent)';
-                
-                const date = new Date(cert.date).toLocaleDateString('uz-UZ');
-                
-                details.innerHTML = `
-                    <p><span>Sertifikat ID:</span> <strong>${cert.id}</strong></p>
-                    <p><span>FIO:</span> <strong>${cert.firstName} ${cert.lastName}</strong></p>
-                    <p><span>Kurs:</span> <strong>${cert.course}</strong></p>
-                    <p><span>Tashkilot:</span> <strong>${cert.organization}</strong></p>
-                    <p><span>Sana:</span> <strong>${date}</strong></p>
-                    ${cert.duration ? `<p><span>Davomiyligi:</span> <strong>${cert.duration}</strong></p>` : ''}
-                    ${cert.instructor ? `<p><span>O'qituvchi:</span> <strong>${cert.instructor}</strong></p>` : ''}
-                    <p><span>Holati:</span> <strong style="color: var(--accent);">✓ Tasdiqlangan</strong></p>
-                `;
-            } else {
-                result.classList.add('result-invalid', 'show');
-                icon.textContent = '❌';
-                title.textContent = 'Sertifikat topilmadi';
-                title.style.color = '#ef4444';
-                details.innerHTML = `
-                    <p style="text-align: center; color: var(--text-muted);">
-                        Bu ID raqamli sertifikat tizimda mavjud emas yoki noto'g'ri kiritilgan.
-                    </p>
-                `;
-            }
-        }
-
-        // Drag and Drop
-        const verifyBox = document.getElementById('verifyBox');
+      db.collection("certificates").doc(id).set({
+        org: org,
+        name: name,
+        course: course,
+        date: date,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert("Sertifikat Firebase bazasiga muvaffaqiyatli saqlandi!");
         
-        verifyBox.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            verifyBox.classList.add('dragover');
-        });
-
-        verifyBox.addEventListener('dragleave', () => {
-            verifyBox.classList.remove('dragover');
-        });
-
-        verifyBox.addEventListener('drop', (e) => {
-            e.preventDefault();
-            verifyBox.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                document.getElementById('qrInput').files = files;
-                handleQRUpload({ target: { files: files } });
-            }
-        });
-
-        // Toast
-        function showToast(icon, message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastIcon').textContent = icon;
-            document.getElementById('toastMessage').textContent = message;
-            
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+        // QR-Kod Yaratish (Sertifikatni tekshirish havolasi bilan)
+        const checkURL = window.location.origin + window.location.pathname + `?id=${id}`;
+        if (!qr) {
+          qr = new QRious({ element: document.getElementById('qr-code'), value: checkURL, size: 75 });
+        } else {
+          qr.value = checkURL;
         }
+      }).catch((err) => {
+        alert("Xatolik: " + err.message);
+      });
+    }
 
-        // Check URL params for verification
-        window.addEventListener('load', () => {
-            const params = new URLSearchParams(window.location.search);
-            const verifyId = params.get('verify');
-            if (verifyId) {
-                showSection('verify');
-                document.getElementById('certIdInput').value = verifyId;
-                verifyById();
-            }
+    function downloadPNG() {
+      const target = document.getElementById('certFrame');
+      html2canvas(target, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Sertifikat_${document.getElementById('inId').value}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    function verifyCertificate(idToSearch) {
+      const id = idToSearch || document.getElementById('searchId').value.trim();
+      const resDiv = document.getElementById('verifyResult');
+      resDiv.innerHTML = "<p>Qidirilmoqda...</p>";
+
+      if(!id) {
+        resDiv.innerHTML = `<div class="status-badge status-error">Iltimos, Sertifikat ID-sini kiriting!</div>`;
+        return;
+      }
+
+      db.collection("certificates").doc(id).get().then(doc => {
+        if(doc.exists) {
+          const d = doc.data();
+          resDiv.innerHTML = `
+            <div class="status-badge status-success">✓ SERTIFIKAT HAQIQIY VA TIZIMDA MAVJUD</div>
+            <div class="card">
+              <p style="margin-bottom:6px;"><strong>Markaz:</strong> ${d.org}</p>
+              <p style="margin-bottom:6px;"><strong>O'quvchi:</strong> ${d.name}</p>
+              <p style="margin-bottom:6px;"><strong>Kurs:</strong> ${d.course}</p>
+              <p style="margin-bottom:6px;"><strong>Berilgan Sana:</strong> ${d.date}</p>
+              <p><strong>Sertifikat ID:</strong> ${id}</p>
+            </div>
+          `;
+        } else {
+          resDiv.innerHTML = `<div class="status-badge status-error">❌ Bunday ID ga ega sertifikat bazadan topilmadi!</div>`;
+        }
+      }).catch(err => {
+        resDiv.innerHTML = `<div class="status-badge status-error">Xatolik: ${err.message}</div>`;
+      });
+    }
+
+    function loadDatabaseList() {
+      const dbDiv = document.getElementById('dbList');
+      dbDiv.innerHTML = "Yuklanmoqda...";
+
+      db.collection("certificates").get().then(snapshot => {
+        if(snapshot.empty) {
+          dbDiv.innerHTML = "<p>Hozircha bazada sertifikatlar yo'q.</p>";
+          return;
+        }
+        let html = `<table style="width:100%; border-collapse:collapse; text-align:left;">
+          <tr style="border-bottom:2px solid #cbd5e1; height:35px;">
+            <th>ID</th><th>F.I.SH</th><th>Kurs</th><th>Sana</th>
+          </tr>`;
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          html += `<tr style="border-bottom:1px solid #f1f5f9; height:35px;">
+            <td><strong>${doc.id}</strong></td>
+            <td>${d.name}</td>
+            <td>${d.course}</td>
+            <td>${d.date}</td>
+          </tr>`;
         });
-    </script>
+        html += "</table>";
+        dbDiv.innerHTML = html;
+      });
+    }
+
+    // Sahifa yuklanganda URL parametrlari bo'yicha tekshirish
+    window.onload = function() {
+      // Sana kiritilmagan bo'lsa bugungi sanani tanlash
+      document.getElementById('inDate').valueAsDate = new Date();
+      updateCert();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryId = urlParams.get('id');
+      if(queryId) {
+        switchTab('tab-verify', document.querySelectorAll('nav button')[1]);
+        document.getElementById('searchId').value = queryId;
+        verifyCertificate(queryId);
+      }
+    };
+  </script>
 </body>
 </html>
